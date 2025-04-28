@@ -1,0 +1,104 @@
+# Import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+#---------------------------
+# Load Dataset
+#---------------------------
+# DATASET LINK
+df = pd.read_csv(r"C:\Users\hp\Downloads\Electric_Vehicle_Population_Data.csv")
+
+#---------------------------
+# EXPLORATORY DATA ANALYSIS
+#---------------------------
+
+# Show first 20 rows
+print(df.head(20))
+
+# Basic statistics
+print(df.describe())
+
+# Check missing values
+print(df.isnull().sum())
+
+# Unique values
+print(df.nunique())
+
+# Dataset information
+print(df.info())
+
+#---------------------------
+# GRAPH VISUALISATION
+#---------------------------
+
+# 1. Average Electric Range Over Years - Line Chart
+avg_range_by_year = df.groupby('Model Year')['Electric Range'].mean()
+plt.figure(figsize=(10, 6))
+plt.plot(avg_range_by_year.index, avg_range_by_year.values, marker='o', linestyle='-', color='green')
+plt.title('Average Electric Range by Model Year')
+plt.xlabel('Model Year')
+plt.ylabel('Average Electric Range (miles)')
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# 2. Electric Range by Model Year - Box Plot
+df_clean = df[(df['Electric Range'] > 0) & (df['Model Year'] > 0)]
+
+plt.figure(figsize=(14, 6))
+sns.boxplot(x='Model Year', y='Electric Range', data=df_clean)
+plt.title('Electric Range Distribution by Model Year')
+plt.xlabel('Model Year')
+plt.ylabel('Electric Range (miles)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# 3. Average Electric Range by Make and Year - Heatmap
+top_makes = df['Make'].value_counts().head(10).index
+df_top = df[df['Make'].isin(top_makes)]
+
+pivot_table = df_top.pivot_table(
+    index='Make', 
+    columns='Model Year', 
+    values='Electric Range', 
+    aggfunc='mean'
+)
+
+plt.figure(figsize=(12, 6))
+sns.heatmap(pivot_table, annot=True, fmt=".1f", cmap='YlGnBu', linewidths=0.5)
+plt.title('Average Electric Range by Make and Model Year')
+plt.xlabel('Model Year')
+plt.ylabel('Car Make')
+plt.tight_layout()
+plt.show()
+
+# 4. Top Models with Highest MSRP - Bar Chart
+df_price = df[(df['Base MSRP'] > 0) & (df['Model'].notna())]
+
+model_msrp = df_price.groupby('Model')['Base MSRP'].max()
+top_models = model_msrp.sort_values(ascending=False).head(10)
+
+plt.figure(figsize=(12, 6))
+top_models.plot(kind='bar', color='crimson')
+plt.title('Top 10 EV Models with Highest Base MSRP')
+plt.xlabel('Model')
+plt.ylabel('Base MSRP ($)')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.show()
+
+# 5. Pie Chart: EV Distribution by Top Zip Code
+df_zip = df[df['Postal Code'].notna()]
+
+zip_counts = df_zip['Postal Code'].value_counts().head(10)
+
+plt.figure(figsize=(8, 8))
+plt.pie(zip_counts, labels=zip_counts.index.astype(str), autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+plt.title('Top 10 Zip Codes by Electric Vehicle Count')
+plt.axis('equal')  # Keep it circular
+plt.tight_layout()
+plt.show()
